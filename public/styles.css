@@ -15,7 +15,8 @@
   --shadow: 0 1px 0 rgba(29, 27, 22, 0.06), 0 8px 30px rgba(29, 27, 22, 0.12);
   --radius: 10px;
   --font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --logo: "Fraunces", Georgia, serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -72,7 +73,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   border-bottom: 3px double var(--ink);
 }
 .brand { text-align: center; }
-.brand h1 { margin: 0; font-family: var(--serif); font-style: italic; font-size: 1.85rem; letter-spacing: -0.02em; font-weight: 600; line-height: 1; }
+.brand h1 { margin: 0; font-family: var(--logo); font-style: italic; font-size: 1.85rem; letter-spacing: -0.02em; font-weight: 600; line-height: 1; }
 .brand h1::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 3px; border-radius: 50%; background: var(--accent); }
 .brand p { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); letter-spacing: 0.02em; }
 .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; border-radius: 50%; color: var(--ink); }

@@ -285,7 +285,7 @@ async function makeCard() {
   const hops = path.length - 1;
   const [word, emoji] = verdicts(hops - puzzle.par);
   g.textBaseline = "alphabetic";
-  g.fillStyle = v("--ink"); g.font = `italic 600 60px ${serif}`;
+  g.fillStyle = v("--ink"); g.font = `italic 600 60px ${v("--logo")}`;
   g.fillText("jumple", 80, 130);
   const bw = g.measureText("jumple").width;
   g.fillStyle = v("--accent"); g.beginPath(); g.arc(80 + bw + 14, 122, 8, 0, 7); g.fill();
