@@ -251,10 +251,10 @@ dialog.help { overflow-y: auto; padding-top: 24px; }
 .tile.removed::after { content: ""; position: absolute; left: 15%; right: 15%; top: 50%; border-top: 1.5px solid var(--danger); transform: rotate(-35deg); }
 
 .ladder { display: flex; flex-direction: column; gap: 6px; background: var(--soft); border-radius: 8px; padding: 14px; margin: 18px 0; }
-.lrow { display: grid; grid-template-columns: 44px auto 1fr; align-items: center; gap: 8px; }
-.lrow .tiles { --size: min(1.75rem, 7vw); justify-content: flex-start; }
+.lrow { display: grid; grid-template-columns: 42px auto 1fr; align-items: center; gap: 6px; }
+.lrow .tiles { --size: min(1.75rem, 6.2vw); justify-content: flex-start; }
 .lnum { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.lnote { white-space: nowrap; font-size: 0.75rem; color: var(--muted); text-align: right; font-family: var(--serif); font-style: italic; }
+.lnote { white-space: nowrap; font-size: 0.72rem; color: var(--muted); text-align: right; font-family: var(--serif); font-style: italic; }
 .tiles.goal.solved .tile { animation: none; }
 
 .help-par { margin: 0 !important; font-size: 0.95rem; color: var(--muted); }
