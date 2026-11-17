@@ -49,7 +49,7 @@
       </section>
       <ol class="hops" id="hops"></ol>
       <section class="row-wrap input-wrap" id="input-wrap">
-        <div class="label" id="input-label">Hop 1</div>
+        <div class="label" id="input-label">Jump 1</div>
         <div class="tiles input" id="input" style="--n:6"><div class="tile skel" style="--i:0"></div><div class="tile skel" style="--i:1"></div><div class="tile skel" style="--i:2"></div><div class="tile skel" style="--i:3"></div><div class="tile skel" style="--i:4"></div><div class="tile skel" style="--i:5"></div></div>
         <div class="counter" id="counter" aria-live="polite"></div>
       </section>
@@ -69,7 +69,7 @@
       <div class="actions">
         <button class="ghost" id="undo-btn" disabled>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
-          Undo hop
+          Undo jump
         </button>
         <button class="ghost hidden" id="result-btn">See result</button>
       </div>
@@ -81,7 +81,7 @@
     <button class="close" aria-label="Close">×</button>
     <p class="kicker">How to play</p>
     <h2 class="help-title">Jump from the <span class="chip-start">start</span> word to the <span class="chip-goal">goal</span>.</h2>
-    <p class="help-lede">Each hop changes <b>up to 3 letters</b>: swap, add or remove. Every hop has to be a real word.</p>
+    <p class="help-lede">Each jump changes <b>up to 3 letters</b>: swap, add or remove. Every jump has to be a real word.</p>
 
     <div class="ladder" aria-label="Example: fish, dish, dash, daisy">
       <div class="lrow"><span class="lnum">Start</span><div class="tiles xs start" data-word="fish"></div><span class="lnote"></span></div>
@@ -101,6 +101,7 @@
     <p class="kicker" id="r-kicker"></p>
     <h2 class="verdict" id="r-verdict"></h2>
     <p class="r-score" id="r-score"></p>
+    <div class="r-stats" id="r-stats"></div>
     <div class="r-path" id="r-path"></div>
     <div class="r-best" id="r-best"></div>
     <button class="primary wide" id="share-btn">

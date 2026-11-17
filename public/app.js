@@ -68,6 +68,17 @@ function rollIn(el, word, delay = 0) {
 /* ---------- state ---------- */
 let words = null;
 let puzzle, number, path, typed = "", done = false;
+let elapsed = 0, runningSince = null, undos = 0, timed = true;
+
+/* ---------- clock: runs from the first keypress, paused while the tab is hidden ---------- */
+const clockNow = () => elapsed + (runningSince ? Date.now() - runningSince : 0);
+function startClock() { if (!done && !runningSince && !document.hidden) runningSince = Date.now(); }
+function pauseClock() { if (runningSince) { elapsed += Date.now() - runningSince; runningSince = null; } }
+function fmtTime(ms) {
+  const t = Math.max(1, Math.round(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, sec = String(t % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
+}
+const fmtUndos = (n) => (n === 0 ? "no undos" : `${n} undo${n > 1 ? "s" : ""}`);
 
 // The word list is big, so it loads in the background; Enter waits for it if needed.
 let wordsLoading = null;
@@ -96,8 +107,13 @@ async function init() {
   puzzle = data.puzzles[idx % data.puzzles.length];
   number = idx + 1;
   const saved = store.get("jumple:game:" + number, null);
-  path = saved?.path?.[0] === puzzle.start ? saved.path : [puzzle.start];
+  const same = saved?.path?.[0] === puzzle.start;
+  path = same ? saved.path : [puzzle.start];
   done = path.at(-1) === puzzle.end;
+  elapsed = same ? saved.elapsed ?? 0 : 0;
+  undos = same ? saved.undos ?? 0 : 0;
+  timed = !(done && same && saved.elapsed == null); // games finished before timing existed
+  if (path.length > 1 || elapsed > 0) startClock();
 
   const date = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
   $("meta").textContent = `No. ${number} · ${date}`;
@@ -134,7 +150,7 @@ function renderHops(animateLast = false) {
     const { dist, marks } = diff(path[i - 1], path[i]);
     const li = document.createElement("li");
     if (animateLast && i === last - 1) li.className = "new";
-    li.innerHTML = `<div class="tiles"></div><div class="hop-meta">Hop ${i} ${dots(dist)}</div>`;
+    li.innerHTML = `<div class="tiles"></div><div class="hop-meta">Jump ${i} ${dots(dist)}</div>`;
     renderTiles(li.firstChild, path[i], marks);
     ol.appendChild(li);
   }
@@ -143,7 +159,7 @@ function renderHops(animateLast = false) {
   $("input-wrap").classList.toggle("done", done);
   $("result-btn").classList.toggle("hidden", !done);
   $("undo-btn").classList.toggle("hidden", done);
-  $("input-label").textContent = `Hop ${path.length}`;
+  $("input-label").textContent = `Jump ${path.length}`;
 }
 
 function renderInput() {
@@ -170,6 +186,7 @@ function renderInput() {
 /* ---------- input ---------- */
 function press(key) {
   if (done || !puzzle) return;
+  startClock();
   if (key === "enter") return submit();
   if (key === "back") typed = typed.slice(0, -1);
   else if (/^[a-z]$/.test(key) && typed.length < MAX_LEN) typed += key;
@@ -196,6 +213,7 @@ async function submit() {
   path.push(typed);
   typed = "";
   done = path.at(-1) === puzzle.end;
+  if (done) pauseClock();
   save();
   renderHops(true);
   renderInput();
@@ -207,6 +225,7 @@ function undo() {
   if (done || path.length < 2) return;
   typed = "";
   path.pop();
+  undos++;
   save();
   renderHops();
   renderInput();
@@ -282,10 +301,10 @@ document.querySelectorAll("#help [data-word]").forEach((el) => {
 
 /* ---------- results, stats, sharing ---------- */
 function save() {
-  store.set("jumple:game:" + number, { path });
+  store.set("jumple:game:" + number, { path, elapsed: clockNow(), undos });
   if (path.at(-1) === puzzle.end) {
     const h = store.get("jumple:history", {});
-    if (!h[number]) { h[number] = { hops: path.length - 1, par: puzzle.par }; store.set("jumple:history", h); }
+    if (!h[number]) { h[number] = { hops: path.length - 1, par: puzzle.par, ms: clockNow(), undos }; store.set("jumple:history", h); }
   }
 }
 
@@ -294,14 +313,20 @@ function finish(fresh) {
   const [word, emoji] = verdicts(hops - puzzle.par);
   $("r-kicker").textContent = `Jumple No. ${number}`;
   $("r-verdict").textContent = `${word} ${emoji}`;
-  $("r-score").textContent = `${hops} hop${hops > 1 ? "s" : ""} · par ${puzzle.par}`;
+  $("r-score").textContent = `${hops} jump${hops > 1 ? "s" : ""} · par ${puzzle.par}`;
+  const { streak } = streaks();
+  $("r-stats").innerHTML = [
+    [timed ? fmtTime(clockNow()) : "–", "Time"],
+    [undos, undos === 1 ? "Undo" : "Undos"],
+    [streak, "Day streak"],
+  ].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
   $("r-path").innerHTML = path
     .map((w, i) => `<span class="w${i === 0 ? " first" : i === path.length - 1 ? " last" : ""}">${w}</span>`)
     .join('<span class="arrow">→</span>');
   const min = puzzle.min ?? puzzle.par;
   $("r-best").innerHTML =
-    hops > min ? `Shortest route, ${min} hops: <b>${puzzle.route.join(" → ")}</b>`
-    : hops < min ? `You beat our shortest route of ${min} hops!`
+    hops > min ? `Shortest route, ${min} jumps: <b>${puzzle.route.join(" → ")}</b>`
+    : hops < min ? `You beat our shortest route of ${min} jumps!`
     : `You found the shortest possible route.`;
   tickCountdown();
   // build the image now: iOS only allows sharing straight from the tap, with no slow work first
@@ -311,20 +336,19 @@ function finish(fresh) {
 
 function shareText() {
   const hops = path.length - 1;
-  const [, emoji] = verdicts(hops - puzzle.par);
-  const rows = path.slice(1).map((w, i) => {
-    const n = diff(path[i], w).dist;
-    return "🟧".repeat(n) + "⬜".repeat(MAX_CHANGES - n);
-  });
+  const [word, emoji] = verdicts(hops - puzzle.par);
+  const { streak } = streaks();
+  const stats = [timed && `⏱ ${fmtTime(clockNow())}`, `↩️ ${fmtUndos(undos)}`, streak > 1 && `🔥 ${streak}-day streak`].filter(Boolean);
   return [
-    `Jumple No. ${number} · ${hops}/${puzzle.par} ${emoji}`,
+    `Jumple No. ${number} · ${word.replace(/!$/, "")} ${emoji}`,
+    `${hops} jump${hops > 1 ? "s" : ""} (par ${puzzle.par})`,
     `${puzzle.start.toUpperCase()} → ${puzzle.end.toUpperCase()}`,
-    ...rows,
+    stats.join(" · "),
     location.origin, // keep https:// so messaging apps turn it into a link
   ].join("\n");
 }
 
-// Result card image for sharing. It shows the shape of each hop but not the hidden words.
+// Result card image for sharing: verdict, the day's two words, and time · undos · streak.
 async function makeCard() {
   await document.fonts.ready;
   const css = getComputedStyle(document.documentElement);
@@ -349,30 +373,38 @@ async function makeCard() {
   g.fillStyle = v("--ink"); g.font = `italic 600 136px ${serif}`;
   g.fillText(`${word} ${emoji}`, 74, 300);
   g.fillStyle = v("--muted"); g.font = `600 42px ${font}`;
-  g.fillText(`${hops} hop${hops > 1 ? "s" : ""} · par ${puzzle.par}`, 80, 370);
+  g.fillText(`${hops} jump${hops > 1 ? "s" : ""} · par ${puzzle.par}`, 80, 370);
 
-  // the ladder: start word, hidden hops, goal word
-  const rows = path.map((w, i) => ({ w, marks: i ? diff(path[i - 1], w).marks : [], i }));
-  const top = 430, bottom = S - 130, gap = 14;
-  const maxLen = Math.max(...path.map((w) => w.length));
-  const t = Math.min(118, (S - 160 - gap * (maxLen - 1)) / maxLen, (bottom - top - gap * (rows.length - 1)) / rows.length);
-  const y0 = top + (bottom - top - (rows.length * t + (rows.length - 1) * gap)) / 2;
-  rows.forEach(({ w, marks, i }, r) => {
-    const y = y0 + r * (t + gap);
+  // start and goal words
+  const wordRow = (w, y, fill) => {
+    const gap = 12, t = Math.min(96, (S - 160 - gap * (w.length - 1)) / w.length);
     const x0 = (S - (w.length * t + (w.length - 1) * gap)) / 2;
-    const first = i === 0, last = i === path.length - 1;
     [...w].forEach((ch, k) => {
       const x = x0 + k * (t + gap);
-      rr(x, y, t, t, t * 0.1);
-      g.fillStyle = first ? v("--ink") : last ? v("--goal") : marks[k] ? v("--accent") : v("--tile");
-      g.fill();
-      if (!first && !last && !marks[k]) { g.strokeStyle = v("--line"); g.lineWidth = 3; g.stroke(); }
-      if (first || last) {
-        g.fillStyle = v("--bg"); g.font = `700 ${t * 0.52}px ${font}`; g.textAlign = "center";
-        g.fillText(ch.toUpperCase(), x + t / 2, y + t * 0.69); g.textAlign = "left";
-      }
+      rr(x, y, t, t, t * 0.1); g.fillStyle = fill; g.fill();
+      g.fillStyle = v("--bg"); g.font = `700 ${t * 0.52}px ${font}`; g.textAlign = "center";
+      g.fillText(ch.toUpperCase(), x + t / 2, y + t * 0.69);
     });
+    g.textAlign = "left";
+    return t;
+  };
+  const t1 = wordRow(puzzle.start, 440, v("--ink"));
+  g.strokeStyle = v("--line"); g.lineWidth = 3; g.beginPath(); g.moveTo(S / 2, 440 + t1 + 14); g.lineTo(S / 2, 440 + t1 + 50); g.stroke();
+  wordRow(puzzle.end, 440 + t1 + 64, v("--goal"));
+
+  // time · undos · streak
+  const { streak } = streaks();
+  const cells = [[timed ? fmtTime(clockNow()) : "–", "time"], [String(undos), undos === 1 ? "undo" : "undos"], [String(streak), "day streak"]];
+  const sy = 840;
+  g.strokeStyle = v("--line"); g.lineWidth = 2;
+  g.beginPath(); g.moveTo(80, sy - 70); g.lineTo(S - 80, sy - 70); g.stroke();
+  cells.forEach(([val, label], k) => {
+    const cx = 80 + ((S - 160) / 3) * (k + 0.5);
+    g.textAlign = "center";
+    g.fillStyle = v("--ink"); g.font = `700 64px ${font}`; g.fillText(val, cx, sy);
+    g.fillStyle = v("--muted"); g.font = `600 30px ${font}`; g.fillText(label, cx, sy + 46);
   });
+  g.textAlign = "left";
   g.fillStyle = v("--muted"); g.font = `600 32px ${font}`; g.textAlign = "center";
   g.fillText(location.host, S / 2, S - 70);
   const blob = await new Promise((r) => c.toBlob(r, "image/png"));
@@ -411,12 +443,17 @@ function tickCountdown() {
 }
 setInterval(() => { if ($("result").open) tickCountdown(); }, 1000);
 
-function renderStats() {
+function streaks() {
   const h = store.get("jumple:history", {});
   const nums = Object.keys(h).map(Number).sort((a, b) => a - b);
   let streak = 0, best = 0, run = 0, prev = null;
   for (const n of nums) { run = prev !== null && n === prev + 1 ? run + 1 : 1; best = Math.max(best, run); prev = n; }
   if (nums.length && nums.at(-1) >= number - 1) streak = run;
+  return { h, nums, streak, best };
+}
+
+function renderStats() {
+  const { h, nums, streak, best } = streaks();
   const deltas = nums.map((n) => h[n].hops - h[n].par);
   const atPar = deltas.filter((d) => d <= 0).length;
   $("stat-grid").innerHTML = [
@@ -437,7 +474,9 @@ function renderStats() {
 
 // A new day began while the tab was open: load the new puzzle.
 document.addEventListener("visibilitychange", async () => {
-  if (document.visibilityState !== "visible" || !puzzle) return;
+  if (!puzzle) return;
+  if (document.hidden) { pauseClock(); save(); return; }
+  if (path.length > 1 || elapsed > 0) startClock();
   const data = await fetch("/puzzles.json").then((r) => r.json());
   if (dayIndex(data.epoch) + 1 !== number) location.reload();
 });
@@ -445,6 +484,7 @@ document.addEventListener("visibilitychange", async () => {
 // Installed web apps (Android) can lock to portrait; browsers ignore this.
 try { screen.orientation?.lock?.("portrait").catch(() => {}); } catch {}
 
+addEventListener("pagehide", () => { if (puzzle && !done) { pauseClock(); save(); } });
 $("retry-btn").onclick = () => init();
 buildKeyboard();
 init();
