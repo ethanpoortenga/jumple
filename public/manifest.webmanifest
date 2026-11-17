@@ -1,0 +1,11 @@
+{
+  "name": "Jumple",
+  "short_name": "Jumple",
+  "description": "A daily word puzzle. Two letters at a time.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f3ec",
+  "theme_color": "#f6f3ec",
+  "icons": [{ "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }]
+}

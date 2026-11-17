@@ -310,3 +310,17 @@ dialog.help { overflow-y: auto; padding-top: 24px; }
   .key { height: 46px; }
   .board { padding-top: 10px; }
 }
+
+/* Phones held sideways: ask to rotate (web pages can't lock orientation on iOS) */
+.rotate { display: none; }
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  .app, dialog { display: none !important; }
+  .rotate {
+    display: flex; position: fixed; inset: 0; z-index: 100;
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    background: var(--bg); color: var(--ink);
+  }
+  .rotate svg { width: 44px; height: 44px; animation: tilt 1.6s ease-in-out infinite; }
+  .rotate p { margin: 0; font-family: var(--serif); font-style: italic; font-size: 1.25rem; }
+}
+@keyframes tilt { 0%, 20% { transform: rotate(-90deg); } 55%, 100% { transform: rotate(0deg); } }

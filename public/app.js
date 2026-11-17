@@ -387,4 +387,7 @@ document.addEventListener("visibilitychange", async () => {
   if (dayIndex(data.epoch) + 1 !== number) location.reload();
 });
 
+// Installed web apps (Android) can lock to portrait; browsers ignore this.
+try { screen.orientation?.lock?.("portrait").catch(() => {}); } catch {}
+
 init();
