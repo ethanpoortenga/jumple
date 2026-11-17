@@ -156,6 +156,7 @@ function renderHops(animateLast = false) {
   }
   $("undo-btn").disabled = done || path.length < 2;
   $("goal").classList.toggle("solved", done);
+  document.body.classList.toggle("solved", done); // hides the keyboard
   $("input-wrap").classList.toggle("done", done);
   $("result-btn").classList.toggle("hidden", !done);
   $("undo-btn").classList.toggle("hidden", done);
@@ -373,9 +374,10 @@ function tickCountdown() {
   const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const s = Math.max(0, Math.floor((next - now) / 1000));
   const pad = (x) => String(x).padStart(2, "0");
-  $("countdown").textContent = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  const text = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  document.querySelectorAll(".countdown").forEach((el) => (el.textContent = text));
 }
-setInterval(() => { if ($("result").open) tickCountdown(); }, 1000);
+setInterval(() => { if (done) tickCountdown(); }, 1000);
 
 function streaks() {
   const h = store.get("jumple:history", {});
