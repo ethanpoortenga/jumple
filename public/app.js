@@ -329,8 +329,6 @@ function finish(fresh) {
     : hops < min ? `You beat our shortest route of ${min} jumps!`
     : `You found the shortest possible route.`;
   tickCountdown();
-  // build the image now: iOS only allows sharing straight from the tap, with no slow work first
-  makeCard().then((f) => (cardFile = f)).catch(() => {});
   setTimeout(() => openSheet("result"), fresh ? 1100 : 250);
 }
 
@@ -348,77 +346,13 @@ function shareText() {
   ].join("\n");
 }
 
-// Result card image for sharing: verdict, the day's two words, and time · undos · streak.
-async function makeCard() {
-  await document.fonts.ready;
-  const css = getComputedStyle(document.documentElement);
-  const v = (k) => css.getPropertyValue(k).trim();
-  const font = getComputedStyle(document.body).fontFamily;
-  const serif = v("--serif");
-  const S = 1080, c = document.createElement("canvas");
-  c.width = c.height = S;
-  const g = c.getContext("2d");
-  const rr = (x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
-  g.fillStyle = v("--bg"); g.fillRect(0, 0, S, S);
-
-  const hops = path.length - 1;
-  const [word, emoji] = verdicts(hops - puzzle.par);
-  g.textBaseline = "alphabetic";
-  g.fillStyle = v("--ink"); g.font = `italic 600 60px ${v("--logo")}`;
-  g.fillText("jumple", 80, 130);
-  const bw = g.measureText("jumple").width;
-  g.fillStyle = v("--accent"); g.beginPath(); g.arc(80 + bw + 14, 122, 8, 0, 7); g.fill();
-  g.fillStyle = v("--muted"); g.font = `600 34px ${font}`; g.textAlign = "right";
-  g.fillText(`No. ${number}`, S - 80, 128); g.textAlign = "left";
-  g.fillStyle = v("--ink"); g.font = `italic 600 136px ${serif}`;
-  g.fillText(`${word} ${emoji}`, 74, 300);
-  g.fillStyle = v("--muted"); g.font = `600 42px ${font}`;
-  g.fillText(`${hops} jump${hops > 1 ? "s" : ""} · par ${puzzle.par}`, 80, 370);
-
-  // start and goal words
-  const wordRow = (w, y, fill) => {
-    const gap = 12, t = Math.min(96, (S - 160 - gap * (w.length - 1)) / w.length);
-    const x0 = (S - (w.length * t + (w.length - 1) * gap)) / 2;
-    [...w].forEach((ch, k) => {
-      const x = x0 + k * (t + gap);
-      rr(x, y, t, t, t * 0.1); g.fillStyle = fill; g.fill();
-      g.fillStyle = v("--bg"); g.font = `700 ${t * 0.52}px ${font}`; g.textAlign = "center";
-      g.fillText(ch.toUpperCase(), x + t / 2, y + t * 0.69);
-    });
-    g.textAlign = "left";
-    return t;
-  };
-  const t1 = wordRow(puzzle.start, 440, v("--ink"));
-  g.strokeStyle = v("--line"); g.lineWidth = 3; g.beginPath(); g.moveTo(S / 2, 440 + t1 + 14); g.lineTo(S / 2, 440 + t1 + 50); g.stroke();
-  wordRow(puzzle.end, 440 + t1 + 64, v("--goal"));
-
-  // time · undos · streak
-  const { streak } = streaks();
-  const cells = [[timed ? fmtTime(clockNow()) : "–", "time"], [String(undos), undos === 1 ? "undo" : "undos"], [String(streak), "day streak"]];
-  const sy = 840;
-  g.strokeStyle = v("--line"); g.lineWidth = 2;
-  g.beginPath(); g.moveTo(80, sy - 70); g.lineTo(S - 80, sy - 70); g.stroke();
-  cells.forEach(([val, label], k) => {
-    const cx = 80 + ((S - 160) / 3) * (k + 0.5);
-    g.textAlign = "center";
-    g.fillStyle = v("--ink"); g.font = `700 64px ${font}`; g.fillText(val, cx, sy);
-    g.fillStyle = v("--muted"); g.font = `600 30px ${font}`; g.fillText(label, cx, sy + 46);
-  });
-  g.textAlign = "left";
-  g.fillStyle = v("--muted"); g.font = `600 32px ${font}`; g.textAlign = "center";
-  g.fillText(location.host, S / 2, S - 70);
-  const blob = await new Promise((r) => c.toBlob(r, "image/png"));
-  return new File([blob], `jumple-${number}.png`, { type: "image/png" });
-}
-let cardFile = null;
 
 $("share-btn").onclick = async () => {
   const text = shareText();
   const btn = $("share-btn");
   try {
     if (navigator.share && matchMedia("(pointer: coarse)").matches) {
-      if (cardFile && navigator.canShare?.({ files: [cardFile] })) await navigator.share({ files: [cardFile], text });
-      else await navigator.share({ text });
+      await navigator.share({ text });
       return;
     }
   } catch (e) { if (e.name === "AbortError") return; }
