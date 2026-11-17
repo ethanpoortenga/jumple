@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="/styles.css" />
   <link rel="preload" href="/words.txt" as="fetch" crossorigin />
 </head>
-<body>
+<body class="loading">
   <div class="rotate" aria-hidden="true">
     <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg>
     <p>Turn your phone upright to play</p>
@@ -35,7 +35,7 @@
       </button>
       <div class="brand">
         <h1>jumple</h1>
-        <p id="meta">&nbsp;</p>
+        <p id="meta"><span class="skel-bar"></span></p>
       </div>
       <button class="icon-btn" id="stats-btn" aria-label="Statistics">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19.5V13M12 19.5V5M19 19.5v-9"/></svg>
@@ -45,17 +45,21 @@
     <main class="board" id="board" aria-live="polite">
       <section class="row-wrap">
         <div class="label">Start</div>
-        <div class="tiles start" id="start"></div>
+        <div class="tiles start" id="start" style="--n:6"><div class="tile skel" style="--i:0"></div><div class="tile skel" style="--i:1"></div><div class="tile skel" style="--i:2"></div><div class="tile skel" style="--i:3"></div><div class="tile skel" style="--i:4"></div><div class="tile skel" style="--i:5"></div></div>
       </section>
       <ol class="hops" id="hops"></ol>
       <section class="row-wrap input-wrap" id="input-wrap">
         <div class="label" id="input-label">Hop 1</div>
-        <div class="tiles input" id="input"></div>
+        <div class="tiles input" id="input" style="--n:6"><div class="tile skel" style="--i:0"></div><div class="tile skel" style="--i:1"></div><div class="tile skel" style="--i:2"></div><div class="tile skel" style="--i:3"></div><div class="tile skel" style="--i:4"></div><div class="tile skel" style="--i:5"></div></div>
         <div class="counter" id="counter" aria-live="polite"></div>
       </section>
+      <div class="load-error" id="load-error" hidden>
+        <p>Couldn't load today's puzzle.</p>
+        <button class="ghost" id="retry-btn">Try again</button>
+      </div>
       <section class="row-wrap goal-wrap">
         <div class="label">Goal <span class="par" id="par"></span></div>
-        <div class="tiles goal" id="goal"></div>
+        <div class="tiles goal" id="goal" style="--n:6"><div class="tile skel" style="--i:0"></div><div class="tile skel" style="--i:1"></div><div class="tile skel" style="--i:2"></div><div class="tile skel" style="--i:3"></div><div class="tile skel" style="--i:4"></div><div class="tile skel" style="--i:5"></div></div>
       </section>
     </main>
 

@@ -325,3 +325,40 @@ dialog.help { overflow-y: auto; padding-top: 24px; }
   .rotate p { margin: 0; font-family: var(--serif); font-style: italic; font-size: 1.25rem; }
 }
 @keyframes tilt { 0%, 20% { transform: rotate(-90deg); } 55%, 100% { transform: rotate(0deg); } }
+
+/* Loading */
+.tiles.input .tile.skel {
+  background: var(--soft); border-color: transparent;
+  animation: breathe 1.3s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 90ms);
+}
+.skel-bar { display: inline-block; width: 92px; height: 9px; border-radius: 99px; background: var(--soft); vertical-align: middle; animation: breathe 1.3s ease-in-out infinite; }
+body.loading .par, body.loading .counter { visibility: hidden; }
+body.loading .keyboard, body.loading .actions { opacity: 0.4; pointer-events: none; }
+.keyboard, .actions { transition: opacity 0.3s ease; }
+/* reveal: letters pop in once the puzzle is ready */
+body.intro .tiles.input .tile, body.intro .hops .tile { animation: pop 0.35s ease both; animation-delay: calc(var(--i, 0) * 40ms); }
+body.intro .par, body.intro .counter, body.intro #meta { animation: fade 0.4s ease both; }
+.load-error { text-align: center; color: var(--muted); padding: 12px 0 4px; }
+.load-error p { margin: 0 0 10px; font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--ink); }
+body.failed .tile.skel { animation: none; opacity: 0.5; }
+body.failed #start .tile, body.failed #goal .tile { opacity: 0.35; }
+/* Enter key while the word list is still loading */
+.key.enter.busy { color: transparent; position: relative; }
+.key.enter.busy::after {
+  content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--bg); border-right-color: transparent; animation: spin 0.7s linear infinite;
+}
+@keyframes breathe { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Split-flap ("train station board") letters while the words load in */
+.tiles .tile.flap { animation: flap 0.11s ease-out; }
+@keyframes flap { from { transform: perspective(240px) rotateX(-75deg); } to { transform: none; } }
+body.loading #start .tile, body.loading #goal .tile, .tiles.flapping .tile {
+  background-image: linear-gradient(to bottom,
+    transparent calc(50% - 0.75px),
+    color-mix(in srgb, currentColor 30%, transparent) calc(50% - 0.75px),
+    color-mix(in srgb, currentColor 30%, transparent) calc(50% + 0.75px),
+    transparent calc(50% + 0.75px));
+}

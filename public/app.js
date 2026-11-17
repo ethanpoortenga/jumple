@@ -41,16 +41,69 @@ const verdicts = (delta) =>
   delta === 1 ? ["Bogey", "🙂"] :
   delta === 2 ? ["Double bogey", "😅"] : ["Made it", "🏁"];
 
+/* ---------- split-flap letters ---------- */
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const randLetter = () => "abcdefghijklmnopqrstuvwxyz"[(Math.random() * 26) | 0];
+function flip(tile, ch) {
+  tile.textContent = ch;
+  tile.classList.remove("flap");
+  void tile.offsetWidth; // restart the animation
+  tile.classList.add("flap");
+}
+// While the puzzle loads, the placeholder start/goal tiles shuffle like a departures board.
+let shuffleTimer = null;
+function shuffleWhileLoading() {
+  const tiles = () => document.querySelectorAll("#start .tile, #goal .tile");
+  tiles().forEach((t) => (t.textContent = randLetter()));
+  if (reduceMotion) return;
+  shuffleTimer = setInterval(() => tiles().forEach((t) => Math.random() < 0.45 && flip(t, randLetter())), 120);
+}
+// Flip each tile through a few letters, then settle on the real word, left to right.
+function flapIn(el, word, delay = 0) {
+  renderTiles(el, word);
+  if (reduceMotion) return;
+  el.classList.add("flapping");
+  [...el.children].forEach((tile, i) => {
+    let left = 4 + i * 2;
+    tile.textContent = randLetter();
+    const step = () => {
+      if (--left > 0) { flip(tile, randLetter()); setTimeout(step, 55); return; }
+      flip(tile, word[i]);
+      if (i === word.length - 1) setTimeout(() => el.classList.remove("flapping"), 150);
+    };
+    setTimeout(step, delay + i * 35);
+  });
+}
+
 /* ---------- state ---------- */
 let words = null;
 let puzzle, number, path, typed = "", done = false;
 
-const wordsReady = fetch("/words.txt")
-  .then((r) => r.text())
-  .then((t) => { words = new Set(t.split("\n")); });
+// The word list is big, so it loads in the background; Enter waits for it if needed.
+let wordsLoading = null;
+function loadWords() {
+  return (wordsLoading ||= fetch("/words.txt")
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then((t) => { words = new Set(t.split("\n")); })
+    .catch((e) => { wordsLoading = null; throw e; }));
+}
+loadWords().catch(() => {});
 
 async function init() {
-  const data = await fetch("/puzzles.json").then((r) => r.json());
+  document.body.classList.remove("failed");
+  $("load-error").hidden = true;
+  let data;
+  try {
+    const r = await fetch("/puzzles.json");
+    if (!r.ok) throw new Error(r.status);
+    data = await r.json();
+  } catch {
+    clearInterval(shuffleTimer);
+    document.querySelectorAll("#start .tile, #goal .tile").forEach((t) => (t.textContent = ""));
+    document.body.classList.add("failed");
+    $("load-error").hidden = false;
+    return;
+  }
   const idx = Math.max(0, dayIndex(data.epoch));
   puzzle = data.puzzles[idx % data.puzzles.length];
   number = idx + 1;
@@ -61,11 +114,14 @@ async function init() {
   const date = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
   $("meta").textContent = `No. ${number} · ${date}`;
   $("par").textContent = `Par ${puzzle.par}`;
-  renderTiles($("start"), puzzle.start);
-  renderTiles($("goal"), puzzle.end);
-  buildKeyboard();
+  clearInterval(shuffleTimer);
+  flapIn($("start"), puzzle.start);
+  flapIn($("goal"), puzzle.end, 180);
+  markGoalKeys();
   renderHops();
   renderInput();
+  document.body.classList.replace("loading", "intro");
+  setTimeout(() => document.body.classList.remove("intro"), 900);
   if (done) finish(false);
   else if (!store.get("jumple:seen-help", false)) { openSheet("help"); store.set("jumple:seen-help", true); }
 }
@@ -73,7 +129,7 @@ async function init() {
 /* ---------- rendering ---------- */
 function renderTiles(el, word, marks = []) {
   el.style.setProperty("--n", Math.max(word.length, 1));
-  el.innerHTML = [...word].map((c, i) => `<div class="tile${marks[i] ? " changed" : ""}">${c}</div>`).join("");
+  el.innerHTML = [...word].map((c, i) => `<div class="tile${marks[i] ? " changed" : ""}" style="--i:${i}">${c}</div>`).join("");
 }
 
 function dots(n, total = MAX_CHANGES) {
@@ -124,7 +180,7 @@ function renderInput() {
 
 /* ---------- input ---------- */
 function press(key) {
-  if (done) return;
+  if (done || !puzzle) return;
   if (key === "enter") return submit();
   if (key === "back") typed = typed.slice(0, -1);
   else if (/^[a-z]$/.test(key) && typed.length < MAX_LEN) typed += key;
@@ -136,7 +192,13 @@ function press(key) {
 async function submit() {
   const prev = path.at(-1);
   if (!typed) return toast("Type a word");
-  if (!words) { toast("Loading words…"); await wordsReady; }
+  if (!words) {
+    const enter = document.querySelector('[data-key="enter"]');
+    enter.classList.add("busy");
+    try { await loadWords(); }
+    catch { return toast("Couldn't load the word list. Check your connection."); }
+    finally { enter.classList.remove("busy"); }
+  }
   const { dist } = diff(prev, typed);
   if (dist === 0) return reject("Change at least one letter");
   if (dist > MAX_CHANGES) return reject(`That's ${dist} changes — ${MAX_CHANGES} max`);
@@ -178,12 +240,16 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.remove("show"), 1600);
 }
 
-function buildKeyboard() {
+function markGoalKeys() {
   const goal = new Set(puzzle.end);
+  document.querySelectorAll(".key[data-key]").forEach((k) => k.classList.toggle("goal-letter", goal.has(k.dataset.key)));
+}
+
+function buildKeyboard() {
   const rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
   $("keyboard").innerHTML = rows
     .map((r, i) => {
-      let keys = [...r].map((c) => `<button class="key${goal.has(c) ? " goal-letter" : ""}" data-key="${c}" aria-label="${c}">${c}</button>`).join("");
+      let keys = [...r].map((c) => `<button class="key" data-key="${c}" aria-label="${c}">${c}</button>`).join("");
       if (i === 1) keys = `<span class="kb-spacer"></span>${keys}<span class="kb-spacer"></span>`;
       if (i === 2)
         keys = `<button class="key wide enter" data-key="enter">Enter</button>${keys}<button class="key wide" data-key="back" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z"/><path d="m12 9.5 5 5m0-5-5 5"/></svg></button>`;
@@ -390,4 +456,7 @@ document.addEventListener("visibilitychange", async () => {
 // Installed web apps (Android) can lock to portrait; browsers ignore this.
 try { screen.orientation?.lock?.("portrait").catch(() => {}); } catch {}
 
+$("retry-btn").onclick = () => { shuffleWhileLoading(); init(); };
+buildKeyboard();
+shuffleWhileLoading();
 init();
