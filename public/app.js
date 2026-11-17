@@ -107,6 +107,8 @@ async function init() {
   markGoalKeys();
   renderHops();
   renderInput();
+  // a game in progress or finished may be taller than the screen: show its end
+  requestAnimationFrame(() => { $("board").scrollTop = $("board").scrollHeight; });
   document.body.classList.replace("loading", "intro");
   setTimeout(() => document.body.classList.remove("intro"), 900);
   if (done) finish(false);
