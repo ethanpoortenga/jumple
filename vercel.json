@@ -24,7 +24,18 @@
           "value": "wordhop-ten.vercel.app"
         }
       ],
-      "destination": "https://playhopple.vercel.app/:path*",
+      "destination": "https://jumple.vercel.app/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "playhopple.vercel.app"
+        }
+      ],
+      "destination": "https://jumple.vercel.app/:path*",
       "permanent": false
     }
   ]

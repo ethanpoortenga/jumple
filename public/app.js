@@ -54,7 +54,7 @@ async function init() {
   const idx = Math.max(0, dayIndex(data.epoch));
   puzzle = data.puzzles[idx % data.puzzles.length];
   number = idx + 1;
-  const saved = store.get("hopple:game:" + number, null);
+  const saved = store.get("jumple:game:" + number, null);
   path = saved?.path?.[0] === puzzle.start ? saved.path : [puzzle.start];
   done = path.at(-1) === puzzle.end;
 
@@ -67,7 +67,7 @@ async function init() {
   renderHops();
   renderInput();
   if (done) finish(false);
-  else if (!store.get("hopple:seen-help", false)) { openSheet("help"); store.set("hopple:seen-help", true); }
+  else if (!store.get("jumple:seen-help", false)) { openSheet("help"); store.set("jumple:seen-help", true); }
 }
 
 /* ---------- rendering ---------- */
@@ -227,17 +227,17 @@ document.querySelectorAll("dialog").forEach((d) => {
 
 /* ---------- results, stats, sharing ---------- */
 function save() {
-  store.set("hopple:game:" + number, { path });
+  store.set("jumple:game:" + number, { path });
   if (path.at(-1) === puzzle.end) {
-    const h = store.get("hopple:history", {});
-    if (!h[number]) { h[number] = { hops: path.length - 1, par: puzzle.par }; store.set("hopple:history", h); }
+    const h = store.get("jumple:history", {});
+    if (!h[number]) { h[number] = { hops: path.length - 1, par: puzzle.par }; store.set("jumple:history", h); }
   }
 }
 
 function finish(fresh) {
   const hops = path.length - 1;
   const [word, emoji] = verdicts(hops - puzzle.par);
-  $("r-kicker").textContent = `Hopple No. ${number}`;
+  $("r-kicker").textContent = `Jumple No. ${number}`;
   $("r-verdict").textContent = `${word} ${emoji}`;
   $("r-score").textContent = `${hops} hop${hops > 1 ? "s" : ""} · par ${puzzle.par}`;
   $("r-path").innerHTML = path
@@ -262,7 +262,7 @@ function shareText() {
     return "🟧".repeat(n) + "⬜".repeat(MAX_CHANGES - n);
   });
   return [
-    `Hopple No. ${number} · ${hops}/${puzzle.par} ${emoji}`,
+    `Jumple No. ${number} · ${hops}/${puzzle.par} ${emoji}`,
     `${puzzle.start.toUpperCase()} → ${puzzle.end.toUpperCase()}`,
     ...rows,
     location.origin, // keep https:// so messaging apps turn it into a link
@@ -286,8 +286,8 @@ async function makeCard() {
   const [word, emoji] = verdicts(hops - puzzle.par);
   g.textBaseline = "alphabetic";
   g.fillStyle = v("--ink"); g.font = `italic 600 60px ${serif}`;
-  g.fillText("hopple", 80, 130);
-  const bw = g.measureText("hopple").width;
+  g.fillText("jumple", 80, 130);
+  const bw = g.measureText("jumple").width;
   g.fillStyle = v("--accent"); g.beginPath(); g.arc(80 + bw + 14, 122, 8, 0, 7); g.fill();
   g.fillStyle = v("--muted"); g.font = `600 34px ${font}`; g.textAlign = "right";
   g.fillText(`No. ${number}`, S - 80, 128); g.textAlign = "left";
@@ -321,7 +321,7 @@ async function makeCard() {
   g.fillStyle = v("--muted"); g.font = `600 32px ${font}`; g.textAlign = "center";
   g.fillText(location.host, S / 2, S - 70);
   const blob = await new Promise((r) => c.toBlob(r, "image/png"));
-  return new File([blob], `hopple-${number}.png`, { type: "image/png" });
+  return new File([blob], `jumple-${number}.png`, { type: "image/png" });
 }
 let cardFile = null;
 
@@ -357,7 +357,7 @@ function tickCountdown() {
 setInterval(() => { if ($("result").open) tickCountdown(); }, 1000);
 
 function renderStats() {
-  const h = store.get("hopple:history", {});
+  const h = store.get("jumple:history", {});
   const nums = Object.keys(h).map(Number).sort((a, b) => a - b);
   let streak = 0, best = 0, run = 0, prev = null;
   for (const n of nums) { run = prev !== null && n === prev + 1 ? run + 1 : 1; best = Math.max(best, run); prev = n; }
