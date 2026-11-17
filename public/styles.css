@@ -327,7 +327,7 @@ dialog.help { overflow-y: auto; padding-top: 24px; }
 @keyframes tilt { 0%, 20% { transform: rotate(-90deg); } 55%, 100% { transform: rotate(0deg); } }
 
 /* Loading */
-.tiles.input .tile.skel {
+.tiles .tile.skel, .tiles.start .tile.skel, .tiles.goal .tile.skel {
   background: var(--soft); border-color: transparent;
   animation: breathe 1.3s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 90ms);
 }
@@ -336,12 +336,11 @@ body.loading .par, body.loading .counter { visibility: hidden; }
 body.loading .keyboard, body.loading .actions { opacity: 0.4; pointer-events: none; }
 .keyboard, .actions { transition: opacity 0.3s ease; }
 /* reveal: letters pop in once the puzzle is ready */
-body.intro .tiles.input .tile, body.intro .hops .tile { animation: pop 0.35s ease both; animation-delay: calc(var(--i, 0) * 40ms); }
+body.intro .tiles.input .tile, body.intro .hops .tile { animation: fade 0.5s ease both; animation-delay: calc(var(--i, 0) * 40ms); }
 body.intro .par, body.intro .counter, body.intro #meta { animation: fade 0.4s ease both; }
 .load-error { text-align: center; color: var(--muted); padding: 12px 0 4px; }
 .load-error p { margin: 0 0 10px; font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--ink); }
 body.failed .tile.skel { animation: none; opacity: 0.5; }
-body.failed #start .tile, body.failed #goal .tile { opacity: 0.35; }
 /* Enter key while the word list is still loading */
 .key.enter.busy { color: transparent; position: relative; }
 .key.enter.busy::after {
@@ -352,13 +351,12 @@ body.failed #start .tile, body.failed #goal .tile { opacity: 0.35; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Split-flap ("train station board") letters while the words load in */
-.tiles .tile.flap { animation: flap 0.11s ease-out; }
-@keyframes flap { from { transform: perspective(240px) rotateX(-75deg); } to { transform: none; } }
-body.loading #start .tile, body.loading #goal .tile, .tiles.flapping .tile {
-  background-image: linear-gradient(to bottom,
-    transparent calc(50% - 0.75px),
-    color-mix(in srgb, currentColor 30%, transparent) calc(50% - 0.75px),
-    color-mix(in srgb, currentColor 30%, transparent) calc(50% + 0.75px),
-    transparent calc(50% + 0.75px));
+/* Reveal: each letter rolls up a short reel and eases to a stop */
+.tile.rolling { padding: 0; display: block; }
+.tile .win {
+  display: block; height: 100%; overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent);
+  mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent);
 }
+.tile .reel { display: block; transition-property: transform; transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); will-change: transform; }
+.tile .reel span { display: grid; place-items: center; height: calc(var(--size) - 3px); }

@@ -41,37 +41,27 @@ const verdicts = (delta) =>
   delta === 1 ? ["Bogey", "🙂"] :
   delta === 2 ? ["Double bogey", "😅"] : ["Made it", "🏁"];
 
-/* ---------- split-flap letters ---------- */
+/* ---------- reveal: letters roll into place like a reel ---------- */
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const randLetter = () => "abcdefghijklmnopqrstuvwxyz"[(Math.random() * 26) | 0];
-function flip(tile, ch) {
-  tile.textContent = ch;
-  tile.classList.remove("flap");
-  void tile.offsetWidth; // restart the animation
-  tile.classList.add("flap");
-}
-// While the puzzle loads, the placeholder start/goal tiles shuffle like a departures board.
-let shuffleTimer = null;
-function shuffleWhileLoading() {
-  const tiles = () => document.querySelectorAll("#start .tile, #goal .tile");
-  tiles().forEach((t) => (t.textContent = randLetter()));
-  if (reduceMotion) return;
-  shuffleTimer = setInterval(() => tiles().forEach((t) => Math.random() < 0.45 && flip(t, randLetter())), 120);
-}
-// Flip each tile through a few letters, then settle on the real word, left to right.
-function flapIn(el, word, delay = 0) {
+function rollIn(el, word, delay = 0) {
   renderTiles(el, word);
   if (reduceMotion) return;
-  el.classList.add("flapping");
   [...el.children].forEach((tile, i) => {
-    let left = 4 + i * 2;
-    tile.textContent = randLetter();
-    const step = () => {
-      if (--left > 0) { flip(tile, randLetter()); setTimeout(step, 55); return; }
-      flip(tile, word[i]);
-      if (i === word.length - 1) setTimeout(() => el.classList.remove("flapping"), 150);
-    };
-    setTimeout(step, delay + i * 35);
+    const spins = 6 + i; // later tiles travel a little further, so they land in sequence
+    const letters = [...Array.from({ length: spins }, randLetter), word[i]];
+    tile.classList.add("rolling");
+    tile.innerHTML = `<span class="win"><span class="reel">${letters.map((c) => `<span>${c}</span>`).join("")}</span></span>`;
+    const reel = tile.querySelector(".reel");
+    reel.style.transitionDuration = `${600 + i * 70}ms`;
+    reel.style.transitionDelay = `${delay + i * 35}ms`;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      reel.style.transform = `translateY(calc((var(--size) - 3px) * -${spins}))`;
+    }));
+    reel.addEventListener("transitionend", () => {
+      tile.classList.remove("rolling");
+      tile.textContent = word[i];
+    }, { once: true });
   });
 }
 
@@ -98,8 +88,6 @@ async function init() {
     if (!r.ok) throw new Error(r.status);
     data = await r.json();
   } catch {
-    clearInterval(shuffleTimer);
-    document.querySelectorAll("#start .tile, #goal .tile").forEach((t) => (t.textContent = ""));
     document.body.classList.add("failed");
     $("load-error").hidden = false;
     return;
@@ -114,9 +102,8 @@ async function init() {
   const date = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
   $("meta").textContent = `No. ${number} · ${date}`;
   $("par").textContent = `Par ${puzzle.par}`;
-  clearInterval(shuffleTimer);
-  flapIn($("start"), puzzle.start);
-  flapIn($("goal"), puzzle.end, 180);
+  rollIn($("start"), puzzle.start);
+  rollIn($("goal"), puzzle.end, 160);
   markGoalKeys();
   renderHops();
   renderInput();
@@ -456,7 +443,6 @@ document.addEventListener("visibilitychange", async () => {
 // Installed web apps (Android) can lock to portrait; browsers ignore this.
 try { screen.orientation?.lock?.("portrait").catch(() => {}); } catch {}
 
-$("retry-btn").onclick = () => { shuffleWhileLoading(); init(); };
+$("retry-btn").onclick = () => init();
 buildKeyboard();
-shuffleWhileLoading();
 init();
