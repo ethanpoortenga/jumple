@@ -4,9 +4,9 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { tiers, buildGraph, shortest, countShortest } from "./lib.mjs";
 
 export const EPOCH = "2026-11-17"; // puzzle #1
-export const MIN = 5; // shortest possible route, in hops, for every puzzle; par is one more
-export const MAX_CHANGES = 2; // letters changed per hop; keep in sync with public/app.js
-const CANDIDATES = 8; // pairs at distance MIN tried per day; the one with the fewest best routes wins
+export const MIN = 4; // shortest possible route, in hops, for every puzzle; par is one more
+export const MAX_CHANGES = 3; // letters changed per hop; keep in sync with public/app.js
+const CANDIDATES = 1; // pairs at distance MIN tried per day; the one with the fewest best routes wins (raise for harder puzzles)
 const DAYS = Number(process.argv[2] || 730);
 const BLOCK = new Set("kill dead death rape drug drugs nazi slave porn naked bomb suicide murder sexual sexy damn hell crap shit fuck bitch bastard penis breast blood corpse weapon terror".split(" "));
 
@@ -49,7 +49,7 @@ for (let day = 0; day < DAYS; day++) {
   const { routes, ...puzzle } = best;
   puzzles.push(puzzle);
   used.add(best.start); used.add(best.end);
-  if (day % 365 === 364) used.clear(); // words may repeat after a year
+  if (day % 120 === 119) used.clear(); // start/goal words may repeat after ~4 months
   if (day % 25 === 0) console.log(day, ((Date.now() - t0) / 1000).toFixed(0) + "s", puzzles.at(-1));
 }
 writeFileSync("public/puzzles.json", JSON.stringify({ epoch: EPOCH, puzzles }));

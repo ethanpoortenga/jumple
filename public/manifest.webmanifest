@@ -1,7 +1,7 @@
 {
   "name": "Jumple",
   "short_name": "Jumple",
-  "description": "A daily word puzzle. Two letters at a time.",
+  "description": "A daily word puzzle. Three letters at a time.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

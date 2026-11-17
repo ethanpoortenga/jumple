@@ -1,6 +1,6 @@
 # Jumple
 
-A daily word puzzle: get from the start word to the goal word, changing up to **2 letters** per hop (swap, add or remove). Every hop must be a real word. Par is one more than the shortest possible route.
+A daily word puzzle: get from the start word to the goal word, changing up to **3 letters** per hop (swap, add or remove). Every hop must be a real word. Par is one more than the shortest possible route.
 
 Live at https://jumple.vercel.app
 

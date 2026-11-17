@@ -1,4 +1,4 @@
-const MAX_CHANGES = 2;
+const MAX_CHANGES = 3;
 const MAX_LEN = 12;
 const $ = (id) => document.getElementById(id);
 
