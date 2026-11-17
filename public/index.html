@@ -68,23 +68,23 @@
     </footer>
   </div>
 
-  <dialog id="help" class="sheet">
+  <dialog id="help" class="sheet help">
     <button class="close" aria-label="Close">×</button>
-    <h2>How to play</h2>
-    <p>Get from the <b>start</b> word to the <b>goal</b> word in as few hops as you can.</p>
-    <ul class="rules">
-      <li>Each hop changes <b>up to 2 letters</b>.</li>
-      <li>A change can <b>swap</b>, <b>add</b> or <b>remove</b> a letter.</li>
-      <li>Every hop has to be a real word, and you can't use a word twice.</li>
-    </ul>
-    <div class="example" aria-label="Example: stone to storm to stormy">
-      <div class="ex-row"><div class="tiles sm start"></div></div>
-      <div class="ex-row"><div class="tiles sm"></div><span class="ex-note">2 swapped</span></div>
-      <div class="ex-row"><div class="tiles sm"></div><span class="ex-note">1 added</span></div>
+    <p class="kicker">How to play</p>
+    <h2 class="help-title">Jump from the <span class="chip-start">start</span> word to the <span class="chip-goal">goal</span>.</h2>
+    <p class="help-lede">Each hop changes <b>up to 2 letters</b>: swap, add or remove. Every hop has to be a real word.</p>
+
+    <div class="ladder" aria-label="Example: fish, dish, dash, daisy">
+      <div class="lrow"><span class="lnum">Start</span><div class="tiles xs start" data-word="fish"></div><span class="lnote"></span></div>
+      <div class="lrow"><span class="lnum">1</span><div class="tiles xs" data-word="dish" data-from="fish"></div><span class="lnote">1 change</span></div>
+      <div class="lrow"><span class="lnum">2</span><div class="tiles xs" data-word="dash" data-from="dish"></div><span class="lnote">1 change</span></div>
+      <div class="lrow"><span class="lnum">3</span><div class="tiles xs goal solved" data-word="daisy"></div><span class="lnote">2 changes</span></div>
     </div>
-    <p>Par is one more than the shortest route. Find the shortest route for a birdie.</p>
-    <p class="muted">A new puzzle every day at midnight.</p>
-    <button class="primary wide" data-close>Play</button>
+
+    <p class="help-par"><b>Par</b> is one more than the shortest route. Find the shortest for a birdie 🐦</p>
+
+    <button class="primary wide" data-close>Let's play</button>
+    <p class="help-foot">A new puzzle every day at midnight</p>
   </dialog>
 
   <dialog id="result" class="sheet">

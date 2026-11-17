@@ -218,12 +218,12 @@ document.querySelectorAll("dialog").forEach((d) => {
   });
 });
 
-// "How to play" example tiles: stone -> storm -> stormy
-(() => {
-  const rows = document.querySelectorAll("#help .ex-row .tiles");
-  const ex = ["stone", "storm", "stormy"];
-  rows.forEach((el, i) => renderTiles(el, ex[i], i ? diff(ex[i - 1], ex[i]).marks : []));
-})();
+// "How to play" demo tiles
+document.querySelectorAll("#help [data-word]").forEach((el) => {
+  const w = el.dataset.word;
+  renderTiles(el, w, el.dataset.from ? diff(el.dataset.from, w).marks : []);
+  if (el.dataset.removed) el.children[+el.dataset.removed].classList.add("removed");
+});
 
 /* ---------- results, stats, sharing ---------- */
 function save() {

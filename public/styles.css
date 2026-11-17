@@ -228,12 +228,39 @@ dialog::backdrop { background: rgba(20, 18, 12, 0.45); backdrop-filter: blur(2px
   border: 0; background: none; font-size: 1.6rem; line-height: 1; color: var(--muted); border-radius: 50%;
 }
 .close:hover { background: var(--soft); }
-.rules { padding-left: 18px; margin: 12px 0; line-height: 1.6; }
-.rules li::marker { color: var(--accent); }
-.example { background: var(--soft); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
-.ex-row { display: flex; align-items: center; gap: 12px; }
-.tiles.sm { --size: 2rem; justify-content: flex-start; gap: 4px; }
-.ex-note { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.close:focus { outline: none; }
+.close:focus-visible { outline: none; background: var(--soft); }
+/* How to play */
+dialog.help { overflow-y: auto; padding-top: 24px; }
+.help .kicker { margin-bottom: 6px !important; }
+.help-title { font-size: clamp(1.45rem, 6.4vw, 1.8rem) !important; line-height: 1.15; margin-bottom: 8px !important; }
+.chip-start, .chip-goal {
+  font-family: var(--font); font-style: normal; font-weight: 700; font-size: 0.62em;
+  text-transform: uppercase; letter-spacing: 0.06em; vertical-align: 0.2em;
+  padding: 2px 8px; border-radius: 4px;
+}
+.chip-start { background: var(--ink); color: var(--bg); }
+.chip-goal { background: var(--goal); color: var(--bg); }
+.help-lede { color: var(--muted); margin: 0 0 14px !important; font-size: 0.95rem; }
+.help-lede b { color: var(--ink); }
+
+
+.tiles.xs .tile { border-radius: 3px; border-width: 1px; }
+.tiles.xs { gap: 3px; }
+.tile.removed { position: relative; color: var(--muted); border-style: dashed; background: transparent; opacity: 0.7; }
+.tile.removed::after { content: ""; position: absolute; left: 15%; right: 15%; top: 50%; border-top: 1.5px solid var(--danger); transform: rotate(-35deg); }
+
+.ladder { display: flex; flex-direction: column; gap: 6px; background: var(--soft); border-radius: 8px; padding: 14px; margin: 18px 0; }
+.lrow { display: grid; grid-template-columns: 44px auto 1fr; align-items: center; gap: 8px; }
+.lrow .tiles { --size: min(1.75rem, 7vw); justify-content: flex-start; }
+.lnum { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lnote { white-space: nowrap; font-size: 0.75rem; color: var(--muted); text-align: right; font-family: var(--serif); font-style: italic; }
+.tiles.goal.solved .tile { animation: none; }
+
+.help-par { margin: 0 !important; font-size: 0.95rem; color: var(--muted); }
+.help-par b { color: var(--ink); }
+.help .primary.wide { margin-top: 20px; }
+.help-foot { text-align: center; font-size: 0.8rem; color: var(--muted); margin: 12px 0 0 !important; }
 
 .primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
