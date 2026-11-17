@@ -101,7 +101,7 @@ async function init() {
 
   const date = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
   $("meta").textContent = `No. ${number} · ${date}`;
-  $("par").textContent = `Par ${puzzle.par}`;
+  $("par").innerHTML = `Par <b>${puzzle.par}</b>`;
   rollIn($("start"), puzzle.start);
   rollIn($("goal"), puzzle.end, 160);
   markGoalKeys();
